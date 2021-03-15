@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jul 30 15:02:56 2019
+
+@author: Rahul.Deb.Das@ibm.com
+"""
+
+### THis is extractive text summarizer
+
+import pandas as pd
+import nltk
+import re
+import numpy as np
+from heapq import nlargest
+from nltk.tokenize import sent_tokenize
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+
+src = '/Users/Rahul.Deb.Das@ibm.com/Documents/Data/Text data/tennis_articles_v4.csv'
+
+df = pd.read_csv(src)
+
+#print(df.columns)
+#print (df['article_text'].head())
+
+sentences = []
+temp_sentences = []
+flatten_sentences = []
+flat_sent = ''
+
+for s in df['article_text']:
+    temp_sentences = sent_tokenize(s)
+    sentences.append(temp_sentences)
+    
+for index, s in enumerate(sentences):
+#    print ('Article:',index, s,'\n')
+    for entry in s:
+        flat_sent = flat_sent + entry
+    
+#print (flat_sent)
+        
+
+test = 'I am Rahul. I eat rice. I work at IBM. Rahul is cool. IBM is a good company. Eating is good for health. I eat noodles.'
+
+stopwordlist = stopwords.words('english')
+word_freq = {}
+for sent in sent_tokenize(test):
+    sent = re.sub(r'[^\w\s]','',sent)
+    for word in word_tokenize(sent):
+        if word not in stopwordlist:
+            if word not in word_freq:
+                word_freq[word] = 1
+            else:
+                word_freq[word] += 1
+            
+print (word_freq)
+
+maximum_freq = max (word_freq.values())
+max_word = max (word_freq, key = lambda key: word_freq[key])
+
+#print ('maximum frequent word is: ',max_word,' with frequency count =', maximum_freq)
+
+top_k = nlargest (3, word_freq, key = word_freq.get)
+max_word = str(top_k[0])
+max_word_value = word_freq[max_word]
+#print (max_word, ': ', word_freq[max_word])
+#print (word_freq[max_word])
+
+for entry in word_freq:
+#    print (entry, ': ', word_freq[entry], ': ',  max_word, ': ', max_word_value)
+    word_freq[entry] = (word_freq[entry]/max_word_value)
+    
+print (word_freq)
+
+sent_freq = {}
+
+for sent in sent_tokenize(test):
+    sent_score = 0
+    for word in word_tokenize (sent):
+        if word in word_freq:
+            sent_score = sent_score + word_freq[word]
+#    print (sent_score)
+    sent_freq[sent] = sent_score
+    
+print ('Input text: ', test)
+
+
+for entry, value in sent_freq.items():
+    print (entry,': ',value)
+top_k = nlargest (3, sent_freq, key = sent_freq.get)
+
+print ('Summary: ')
+for entry in top_k:
+    print (entry)
+        
